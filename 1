@@ -1,35 +1,54 @@
-apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils
-apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
-apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
-apt-get install git
-apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake
+apt update  
+apt install -y software-properties-common  
+add-apt-repository -y ppa:bitcoin/bitcoin  
+apt update  
+apt dist-upgrade -y
+apt install -y libdb4.8-dev libdb4.8++-dev  
+apt install -y automake  
+apt install -y bsdmainutils  
+apt install -y g++  
+apt install -y git  
+apt install -y make  
+apt install -y build-essential  
+apt install -y autoconf libtool pkg-config  
+apt install -y libboost-all-dev libssl-dev libevent-dev  
+apt install -y libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler  
 
-sudo add-apt-repository ppa:bitcoin/bitcoin
-sudo apt-get update
-sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
-git clone http://github.com/biblepay/biblepay-evolution
-prefix=x86_64-pc-linux-gnu
-cd biblepay-evolution/depends
-make -j4 # Choose a good -j value, depending on the number of CPU cores available
-cd ..
-./autogen.sh
-#Note: if echo `pwd` does not return your working directory, replace it with your working directory such as /biblepay-evolution/
-./configure --prefix `pwd`/depends/x86_64-pc-linux-gnu
-make
+git clone https://github.com/biblepay/biblepay-evolution 
 
-free #check if swap is 0
-dd if=/dev/zero of=/var/swap.img bs=1024k count=1000
-mkswap /var/swap.img
-swapon /var/swap.img
-free #check if swap is 1024
+BP_ROOT=$(pwd)  
+BDB_PREFIX="${BP_ROOT}/db4"  
+mkdir -p $BDB_PREFIX  
 
-sudo make
+wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'  
+echo '12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz' | sha256sum -c  
+tar -xzvf db-4.8.30.NC.tar.gz  
+cd db-4.8.30.NC/build_unix  
+../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX  
+make install  
+
+cd $BP_ROOT  
+cd biblepay-evolution  
+chmod 777 share/genbuild.sh  
+chmod 777 autogen.sh  
+
+./autogen.sh  
+./configure LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/"  
+#swapfile
+free 
+#check if swap is 0 
+dd if=/dev/zero of=/var/swap.img bs=1024k count=1000 
+mkswap /var/swap.img 
+swapon /var/swap.img 
+free 
+#check if swap is 1024
+make 
 echo 'addnode=node.biblepay.org  
 addnode=biblepay.inspect.network  
 gen=1  
 genproclimit=1
 poolport=80  
 pool=http://pool.biblepay.org  
-workerid=azu' >> /.biblepaycore/biblepay.conf
+workerid=azu' >> /root/.biblepaycore/biblepay.conf
 cd ~/biblepay/src/biblepayd --daemon
