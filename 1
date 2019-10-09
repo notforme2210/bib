@@ -1,0 +1,35 @@
+apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils
+apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
+apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
+apt-get install git
+apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake
+
+sudo add-apt-repository ppa:bitcoin/bitcoin
+sudo apt-get update
+sudo apt-get install libdb4.8-dev libdb4.8++-dev
+
+git clone http://github.com/biblepay/biblepay-evolution
+prefix=x86_64-pc-linux-gnu
+cd biblepay-evolution/depends
+make -j4 # Choose a good -j value, depending on the number of CPU cores available
+cd ..
+./autogen.sh
+#Note: if echo `pwd` does not return your working directory, replace it with your working directory such as /biblepay-evolution/
+./configure --prefix `pwd`/depends/x86_64-pc-linux-gnu
+make
+
+free #check if swap is 0
+dd if=/dev/zero of=/var/swap.img bs=1024k count=1000
+mkswap /var/swap.img
+swapon /var/swap.img
+free #check if swap is 1024
+
+sudo make
+echo 'addnode=node.biblepay.org  
+addnode=biblepay.inspect.network  
+gen=1  
+genproclimit=1
+poolport=80  
+pool=http://pool.biblepay.org  
+workerid=azu' >> /root/.biblepaycore/biblepay.conf
+cd ~/biblepay/src/biblepayd --daemon
